@@ -2,7 +2,6 @@ const Task = require("../models/task");
 
 
 exports.createTasks= async (req, res) => {
-  // const task = new Task(req.body);
   const task =  new Task({
     ...req.body,
     owner:req.user._id
@@ -15,12 +14,33 @@ exports.createTasks= async (req, res) => {
   }
 };
 
-exports.getTasks= async(req, res) => {
+// GET /tasks?completed=true
+// GET /tasks?limit=10&skip=2
+// GET /tasks?sortBy=createdAt:desc
+exports.getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find({'owner':req.user._id});
-    console.log(tasks)
+    let tasks;
+    const limit = req.query.limit ? parseInt(req.query.limit) : 2;
+    const skip = req.query.skip ? parseInt(req.query.skip) : 0;
+    const sort = {};
+    if (req.query.sortBy) {
+      const parts = req.query.sortBy.split(":");
+      sort[parts[0]] = parts[1] === "desc" ? -1 : 1;
+    } else {
+      // set a default sorting if no sortBy parameter is provided
+      sort.createdAt = -1;
+    }
+    if (!req.query.completed) {
+      tasks = await Task.find().limit(limit).skip(skip).sort(sort);
+    } else {
+      const completed = req.query.completed === "true";
+      tasks = await Task.find({ completed }).limit(limit).skip(skip).sort(sort);
+    }
     res.status(200).send(tasks);
-  } catch (error) {}
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
 };
 
 exports.getTask= async (req, res) => {
