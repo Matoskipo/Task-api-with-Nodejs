@@ -1,7 +1,8 @@
 const User = require("../models/user");
 const Task = require("../models/task");
 const bcrypt = require("bcryptjs");
-
+const sharp = require('sharp')
+ 
 exports.registerUsers = async (req, res) => { 
   const user = new User(req.body); 
   try {
@@ -119,3 +120,32 @@ exports.deleteUser = async (req, res) => {
     res.status(500).send({ error: "Server error" });
   }
 };
+
+
+exports.uploadAvatar=async(req,res)=>{
+  const buffer = await sharp(req.file.buffer).resize({width:250, height:250}).png().toBuffer()
+  req.user.avatar = buffer
+  await req.user.save()
+  res.send()
+}
+exports.deleteAvatar=async(req,res)=>{
+  
+    req.user.avatar = undefined;
+    await req.user.save()
+    res.send('profile image successfuly deleted')
+  
+}
+
+exports.getAvatar=async(req,res)=>{
+  try {
+    const user = await User.findById(req.params.id)
+    if(!user || !user.avatar){
+      throw new Error()
+    }
+    res.set('Content-type', 'image/png')
+    res.send(user.avatar)
+  } catch (error) {
+    res.status(404).send()
+  }
+}
+

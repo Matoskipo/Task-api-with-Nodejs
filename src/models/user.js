@@ -3,6 +3,7 @@ const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken')
 const Task = require('./task')
+
 const dotenv = require('dotenv')
 dotenv.config()
 
@@ -53,7 +54,10 @@ const userSchema = new mongoose.Schema({
         required:true
        } 
     }
-  ]
+  ],
+  avatar:{
+    type:Buffer
+  }
 },{
   timestamps:true
 });
@@ -69,6 +73,7 @@ userSchema.methods.toJSON =function(){
    const userObject = user.toObject()
     delete userObject.password
     delete userObject.tokens
+    delete userObject.avatar
    return userObject
 }
 
